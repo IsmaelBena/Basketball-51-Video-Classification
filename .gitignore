@@ -3,3 +3,6 @@ basketball_classification_env/
 
 # video dataset
 dataset/
+
+# cache
+__pycache__/

@@ -11,5 +11,15 @@ Method:
 Convnet -> LSTM
 
 # How To Run
-Python Version: 3.X.X
+Python Version: 3.9.5
+
+## City Hyperion [linux server]
+```
+sh setup.sh
+```
+
+## Windows:
+```
+.\setup.ps1
+```
 
