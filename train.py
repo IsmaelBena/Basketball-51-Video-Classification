@@ -2,13 +2,16 @@ from dataset import LocalDataset, BasketballVideos
 from torch.utils.data import DataLoader
 import os
 import torch
+import numpy as np
+import yaml
 
 from baseline_model import BaselineModel
+from logger import Logger
 
-TRAIN_BATCH_SIZE = 10
-epochs = 1
+TRAIN_BATCH_SIZE = 24
+epochs = 10
 
-data = LocalDataset(os.getcwd() + '\\dataset\\', 0.02).load_dataset()
+data = LocalDataset(os.getcwd() + '\\dataset\\', 1).load_dataset()
 #print(data.dir)
 #print(data.load_dataset())
 
@@ -41,12 +44,13 @@ print('hello?')
 
 model.to(device)
 
-def train_model(model, training_loader, loss_function, optimiser, epochs):
+def train_model(model, training_loader, loss_function, optimiser, logger, epochs):
     model.train()
     
     for epoch in range(epochs):
 
         print(f'Epoch: {epoch}')
+        losses = []
 
         for idx, batch in enumerate(training_loader):
             
@@ -73,6 +77,12 @@ def train_model(model, training_loader, loss_function, optimiser, epochs):
             loss.backward()
             optimiser.step()
 
-            print(loss)
+            print(f'\tLoss: {loss}')
+            losses.append(loss)
 
-train_model(model, training_loader, loss_function, optimiser, epochs)
+        logger.log({'train_loss': np.average(losses)})
+
+wandb_logger = Logger(f"inm705_cw_initial_model", project='INM705_CW')
+logger = wandb_logger.get_logger()
+
+train_model(model, training_loader, loss_function, optimiser, logger, epochs)

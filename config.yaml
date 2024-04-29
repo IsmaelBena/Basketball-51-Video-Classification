@@ -1,0 +1,6 @@
+data_settings:
+  data_dir: "dataset"
+  unclean_data_dir: "unclean_dataset"
+  train_batch_size: 20
+model_settings:
+  epochs: 10

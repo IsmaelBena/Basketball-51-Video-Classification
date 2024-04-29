@@ -46,9 +46,15 @@ class LocalDataset():
                     # print(f'{target}: {len(frames)}')
                     # (3x320x240xmissing_frames)
 
-        print(len(self.x))
-        return self.x, self.y, self.most_frames
 
+        # change 180 to self.most_frames
+        for index, video in enumerate(self.x):
+            if len(video) < 180:
+                self.x[index] = np.append(self.x[index], np.zeros((180 - len(video), 240, 320, 3)), axis=0)
+                self.x[index] = np.moveaxis(self.x[index], -1, 0)
+
+        print(len(self.x))
+        return self.x, self.y
 
 class BasketballVideos(Dataset):
         def __init__(self, data):
@@ -56,21 +62,8 @@ class BasketballVideos(Dataset):
             self.videos = data[0]
             print(len(self.videos))
             self.labels = data[1]
-            self.most_frames = data[2]
 
         def __getitem__(self, index):
-
-                if len(self.videos[index]) < self.most_frames:
-                    # self.videos[index] = self.videos[index] + np.zeros((self.most_frames - len(self.videos[index]), 240, 320, 3))
-                    self.videos[index] = np.append(self.videos[index], np.zeros((self.most_frames - len(self.videos[index]), 240, 320, 3)), axis=0)
-                    # print(f'new video shape: {self.videos[index].shape}')
-                    #print(self.videos[index].shape())
-
-                    #self.videos[index].append()
-
-                self.videos[index] = np.moveaxis(self.videos[index], -1, 0)
-                # print(self.videos[index].shape)
-
                 return {"videos": torch.tensor(self.videos[index], dtype = torch.float32), 
                         "labels": torch.tensor(self.labels[index], dtype = torch.int64)
                         }
