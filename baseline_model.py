@@ -18,13 +18,16 @@ class BaselineModel(nn.Module):
         self.act2 = nn.ReLU()
         self.pool2 = nn.MaxPool3d((1, 3, 4), stride = 1)
 
-        self.flatten = nn.Flatten(start_dim=1, end_dim=-1)
+        self.flatten = nn.Flatten(start_dim=2, end_dim=-1)
 
         # LSTM
-        self.lstm = nn.Sequential(
-            nn.LSTM(3200, 256),
-            nn.Linear(256, 8)
-        )
+        # self.lstm = nn.Sequential(
+        #     nn.LSTM(3200, 256),
+        #     nn.Linear(256, 8)
+        # )
+
+        self.lstm = nn.LSTM(3200, 256, device = device)
+        self.linear = nn.Linear(256, 8, device = device)
 
         
 
@@ -44,15 +47,18 @@ class BaselineModel(nn.Module):
         x = self.flatten(x)
         print(f'flattened: {x.shape}')
 
-        x, _ = self.lstm[0](x.view(len(input), 1, -1))
+        x, _ = self.lstm(x.view(len(input), 1, -1))
         # print(f'lstm1: {x.shape}')
-        x = self.lstm[1](x.view(len(input), -1))
+
+        x = self.linear(x.view(len(input), -1))
         #print(f'lstm2: {x.shape}')
 
-        y_pred = nn.functional.log_softmax(x, dim=1)
+        #y_pred = nn.functional.log_softmax(x, dim=1)
 
-        y_pred = torch.tensor(y_pred, dtype = torch.long)
+        # logits = torch.tensor(x, dtype = torch.float32)
 
-        return y_pred
+        logits = x.clone().detach().requires_grad_(True)
+
+        return logits
     
     

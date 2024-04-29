@@ -72,7 +72,7 @@ class BasketballVideos(Dataset):
                 # print(self.videos[index].shape)
 
                 return {"videos": torch.tensor(self.videos[index], dtype = torch.float32), 
-                        "labels": torch.tensor(self.labels[index], dtype = torch.float32)
+                        "labels": torch.tensor(self.labels[index], dtype = torch.int64)
                         }
         
         def __len__(self):
