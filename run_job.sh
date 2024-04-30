@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name inm705                      # Job name
-#SBATCH --partition=gengpu                         # Select the correct partition.
+#SBATCH --partition=preemptgpu                         # Select the correct partition.
 #SBATCH --nodes=1                                # Run on 1 nodes (each node has 48 cores)
 #SBATCH --ntasks-per-node=1                        # Run one task
 #SBATCH --cpus-per-task=4                          # Use 4 cores, most of the procesing happens on the GPU
@@ -22,11 +22,12 @@ export WANDB_API_KEY=
 
 echo $WANDB_API_KEY
 
+
 python --version
 #module load libs/nvidia-cuda/11.2.0/bin
 
-wandb login $WANDB_API_KEY --relogin
+#wandb login $WANDB_API_KEY --relogin
 #pip freeze
 #Run your script.
-export https_proxy=http://hpc-proxy00.city.ac.uk
+export https_proxy=http://hpc-proxy00.city.ac.uk:3128
 python3 train.py
