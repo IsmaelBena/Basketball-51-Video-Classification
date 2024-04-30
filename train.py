@@ -12,7 +12,7 @@ from logger import Logger
 TRAIN_BATCH_SIZE = 24
 epochs = 10
 
-data = LocalDataset(os.patch.join(os.getcwd(), 'dataset'), 1).load_dataset()
+data = LocalDataset(os.path.join(os.getcwd(), 'dataset'), 1).load_dataset()
 
 checkpoint_dir = os.path.join(os.getcwd(), get_config("model")["checkpoint_dir"])
 
