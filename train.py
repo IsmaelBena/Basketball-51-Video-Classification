@@ -4,6 +4,7 @@ import os
 import torch
 import numpy as np
 import yaml
+from utils import get_config
 
 from baseline_model import BaselineModel
 from logger import Logger
@@ -12,8 +13,8 @@ TRAIN_BATCH_SIZE = 24
 epochs = 10
 
 data = LocalDataset(os.getcwd() + '\\dataset\\', 1).load_dataset()
-#print(data.dir)
-#print(data.load_dataset())
+
+checkpoint_dir = os.path.join(os.getcwd(), get_config("model")["checkpoint_dir"])
 
 if torch.cuda.is_available():
     device = torch.device('cuda')
@@ -79,6 +80,8 @@ def train_model(model, training_loader, loss_function, optimiser, logger, epochs
 
             print(f'\tLoss: {loss}')
             losses.append(loss)
+            
+            torch.save(model.state_dict(), os.path.join(checkpoint_dir, f'base_epoch_{epoch}'))
 
         logger.log({'train_loss': np.average(losses)})
 
