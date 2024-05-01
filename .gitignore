@@ -5,5 +5,11 @@ basketball_classification_env/
 dataset/
 unclean_dataset/
 
+#checkpoints
+checkpoints/
+
 # cache
 __pycache__/
+
+# wandb logging
+wandb/

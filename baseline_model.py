@@ -32,24 +32,24 @@ class BaselineModel(nn.Module):
         
 
     def forward(self, input):
-        print(f'input: {input.shape}')
+        #print(f'input: {input.shape}')
 
         x = self.act1(self.conv1(input))
-        print(f'act1: {x.shape}')
+        #print(f'act1: {x.shape}')
         x = self.pool1(x)
-        print(f'pool1: {x.shape}')
+        #print(f'pool1: {x.shape}')
 
         x = self.act2(self.conv2(x))
-        print(f'act2: {x.shape}')
+        #print(f'act2: {x.shape}')
         x = self.pool2(x)
-        print(f'pool2: {x.shape}')
+        #print(f'pool2: {x.shape}')
 
         x = self.flatten(x)
-        print(f'flattened: {x.shape}')
+        #print(f'flattened: {x.shape}')
 
         x, _ = self.lstm(x.view(len(input), 1, -1))
         # print(f'lstm1: {x.shape}')
-
+        
         x = self.linear(x.view(len(input), -1))
         #print(f'lstm2: {x.shape}')
 
