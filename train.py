@@ -11,10 +11,12 @@ from baseline_model import BaselineModel
 from grayscale_model import GrayscaleModel
 from logger import Logger
 
-# ========= PARAMS ===========
+# ========= PARAMS ==============================================================================================================
 
-TRAIN_BATCH_SIZE = 2
-epochs = 30
+training_config = get_config('model')
+
+TRAIN_BATCH_SIZE = training_config['batch_size']
+epochs = training_config['epochs']
 
 train_params = {'batch_size': TRAIN_BATCH_SIZE,
                 'shuffle': True,
@@ -30,26 +32,14 @@ else:
 
 print(f'Device: {device}')
 
-# ============================
+checkpoint_dir = os.path.join(os.getcwd(), training_config["checkpoint_dir"])
 
-checkpoint_dir = os.path.join(os.getcwd(), get_config("model")["checkpoint_dir"])
+if not os.path.exists(checkpoint_dir):
+    os.makedirs(checkpoint_dir)
 
+# ===============================================================================================================================
 
-# data = LocalDataset(os.path.join(os.getcwd(), 'dataset'), True).load_dataset()
-# training_set = BasketballVideos(data)
-# training_loader = DataLoader(training_set, **train_params)
-# print(len(training_loader.dataset))
-
-#model = BaselineModel(device)
-model = GrayscaleModel(device)
-
-loss_function = torch.nn.CrossEntropyLoss()
-optimiser = torch.optim.Adam(model.parameters(), lr = 0.5, weight_decay = 0.01)
-
-#print(training_loader.dataset[0])
-print('hello?')
-
-model.to(device)
+# =================   Base training function that takes all the data at once, too resource hungry.  =============================
 
 def train_model(model, training_loader, loss_function, optimiser, logger, epochs):
     model.train()
@@ -90,12 +80,9 @@ def train_model(model, training_loader, loss_function, optimiser, logger, epochs
 
         logger.log({'train_loss': np.average(losses)})
 
-wandb_logger = Logger(f"inm705_cw_initial_model_decay", project='INM705_CW')
-logger = wandb_logger.get_logger()
+# ===============================================================================================================================
 
-# train_model(model, training_loader, loss_function, optimiser, logger, epochs)
-
-# implement segmented loader
+# =================  Training function that reads the data segments at a time, takes longer but saves on memory.  ===============
 
 def train_in_segments(model, loss_function, optimiser, logger, epochs, data_slider_fraction, checkpoint_name=''):
     print("Starting segmented training")
@@ -157,5 +144,30 @@ def train_in_segments(model, loss_function, optimiser, logger, epochs, data_slid
         torch.save(model.state_dict(), os.path.join(checkpoint_dir, f'grayscale_epoch_{epoch}_s_{data_slider_fraction}'))
 
         logger.log({'train_loss': np.average(losses)})
+
+# ===========  Call the functions here ================================================================
+
+# data = LocalDataset(os.path.join(os.getcwd(), 'dataset'), True).load_dataset()
+# training_set = BasketballVideos(data)
+# training_loader = DataLoader(training_set, **train_params)
+# print(len(training_loader.dataset))
+
+#model = BaselineModel(device)
+model = GrayscaleModel(device)
+
+loss_function = torch.nn.CrossEntropyLoss()
+optimiser = torch.optim.Adam(model.parameters(), lr = 0.5, weight_decay = 0.01)
+
+#print(training_loader.dataset[0])
+print('hello?')
+
+model.to(device)
+
+wandb_logger = Logger(f"inm705_cw_initial_model_decay", project='INM705_CW')
+logger = wandb_logger.get_logger()
+
+# train_model(model, training_loader, loss_function, optimiser, logger, epochs)
+
+# implement segmented loader
 
 train_in_segments(model, loss_function, optimiser, logger, epochs, 0.02)

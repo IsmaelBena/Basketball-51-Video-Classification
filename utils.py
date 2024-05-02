@@ -269,13 +269,13 @@ def split_train_val_test(train_fraction, val_fraction, test_fraction, original_f
             for idx, file in enumerate(shuffled_files):
                 if idx/len(shuffled_files) < train_fraction:
                     print(f' - Moving training file: {file}                    ---           {round(((idx+1)*100)/len(shuffled_files), 2)}%         ', end='\r', flush=True)
-                    shutil.move(os.path.join(original_dir, shuffled_labels[idx], file), os.path.join(generated_dir, "train", shuffled_labels[idx]))
+                    shutil.move(os.path.join(original_dir, target, file), os.path.join(generated_dir, "train", target))
                 elif idx/len(shuffled_files) < train_fraction + val_fraction:
                     print(f' - Moving validation file: {file}                    ---           {round(((idx+1)*100)/len(shuffled_files), 2)}%       ', end='\r', flush=True)
-                    shutil.move(os.path.join(original_dir, shuffled_labels[idx], file), os.path.join(generated_dir, "val", shuffled_labels[idx]))
+                    shutil.move(os.path.join(original_dir, target, file), os.path.join(generated_dir, "val", target))
                 else:
                     print(f' - Moving testing file: {file}                    ---           {round(((idx+1)*100)/len(shuffled_files), 2)}%          ', end='\r', flush=True)
-                    shutil.move(os.path.join(original_dir, shuffled_labels[idx], file), os.path.join(generated_dir, "test", shuffled_labels[idx]))
+                    shutil.move(os.path.join(original_dir, target, file), os.path.join(generated_dir, "test", target))
             print(f'\n {target} Files split and moved')
 
         # print("Shuffling files")
@@ -297,5 +297,5 @@ def split_train_val_test(train_fraction, val_fraction, test_fraction, original_f
         #         shutil.move(os.path.join(original_dir, shuffled_labels[idx], file), os.path.join(generated_dir, "test", shuffled_labels[idx]))
         # print("\n Files split and moved")
 
-        print(f'\nDeleting {original_dir}.')
-        shutil.rmtree(original_dir)
+        # print(f'\nDeleting {original_dir}.')
+        # shutil.rmtree(original_dir)
