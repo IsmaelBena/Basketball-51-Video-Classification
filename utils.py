@@ -251,20 +251,20 @@ def split_train_val_test(train_fraction, val_fraction, test_fraction, original_f
                 print(f'Confirmed the existence of {os.path.join(generated_dir, "train", target)}')
 
             if not os.path.exists(os.path.join(generated_dir, "val", target)):
-                print(f'Generating {os.path.join(generated_dir, "train", target)}')
+                print(f'Generating {os.path.join(generated_dir, "val", target)}')
                 os.makedirs(os.path.join(generated_dir, "val", target))
             else:
                 print(f'Confirmed the existence of {os.path.join(generated_dir, "train", target)}')
 
             if not os.path.exists(os.path.join(generated_dir, "test", target)):
-                print(f'Generating {os.path.join(generated_dir, "train", target)}')
+                print(f'Generating {os.path.join(generated_dir, "test", target)}')
                 os.makedirs(os.path.join(generated_dir, "test", target))
             else:
                 print(f'Confirmed the existence of {os.path.join(generated_dir, "train", target)}') 
 
 
-            files = [file for file in os.listdir(os.path.join(original_dir, target))]
-            shuffled_files = random.shuffle(files)
+            shuffled_files = [file for file in os.listdir(os.path.join(original_dir, target))]
+            random.shuffle(shuffled_files)
             print(f'Moving {len(shuffled_files)} files from: {os.path.join(original_dir, target)} to {os.path.join(generated_dir, target)}')
             for idx, file in enumerate(shuffled_files):
                 if idx/len(shuffled_files) < train_fraction:
@@ -297,5 +297,5 @@ def split_train_val_test(train_fraction, val_fraction, test_fraction, original_f
         #         shutil.move(os.path.join(original_dir, shuffled_labels[idx], file), os.path.join(generated_dir, "test", shuffled_labels[idx]))
         # print("\n Files split and moved")
 
-        # print(f'\nDeleting {original_dir}.')
-        # shutil.rmtree(original_dir)
+        print(f'\nDeleting {original_dir}.')
+        shutil.rmtree(original_dir)

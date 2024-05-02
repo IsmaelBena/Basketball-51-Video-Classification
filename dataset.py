@@ -3,6 +3,7 @@ import cv2
 import os
 import torch
 import numpy as np
+import random
 
 class LocalDataset():
     def __init__(self, dir, gray_scale = False, start_segment=0, end_segment=1):
@@ -44,8 +45,6 @@ class LocalDataset():
                 self.y.append(t_idx)
 
             print(f' - Label: {t_idx+1}/{len(self.targets)} | File: {len(files_segment)}/{len(files_segment)} [100.00%]      ', end='\n')
-
-        #print(len(self.x))
 
         return self.x, self.y
 

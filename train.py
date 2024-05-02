@@ -84,31 +84,32 @@ def train_model(model, training_loader, loss_function, optimiser, logger, epochs
 
 # =================  Training function that reads the data segments at a time, takes longer but saves on memory.  ===============
 
-def train_in_segments(model, loss_function, optimiser, logger, epochs, data_slider_fraction, checkpoint_name=''):
+def train_in_segments(model, loss_function, optimiser, logger, epochs, data_slider_fraction, checkpoint_name='', gray_scale=False):
     print("Starting segmented training")
     if checkpoint_name != '':
         model.load_state_dict(torch.load(os.path.join(checkpoint_dir, checkpoint_name)))
         print(f'Loaded model checkpoint: {checkpoint_name}')
-
-    model.train()
     
     for epoch in range(epochs):
     
         print(f'Epoch: {epoch}')
-        losses = []
+        training_losses = []
+        eval_losses = []
 
+        model.train()
         start_segment = 0
         segment_num = 0
 
+        # Training loop
         while start_segment < 1:
             segment_num += 1
-            print(f'Segment {segment_num} of {math.ceil(1/data_slider_fraction)}')
+            print(f'Training segment {segment_num} of {math.ceil(1/data_slider_fraction)}')
             end_segment = start_segment+data_slider_fraction
             if end_segment > 1:
                 end_segment = 1
 
-            s_data = LocalDataset(os.path.join(os.getcwd(), 'dataset'), gray_scale=True, start_segment=start_segment, end_segment=end_segment).load_dataset()
-            s_batch = BasketballVideos(s_data)
+            s_training_data = LocalDataset(os.path.join(os.getcwd(), 'dataset', 'train'), gray_scale=gray_scale, start_segment=start_segment, end_segment=end_segment).load_dataset()
+            s_batch = BasketballVideos(s_training_data)
             s_training_loader = DataLoader(s_batch, **train_params)
 
             for idx, batch in enumerate(s_training_loader):
@@ -135,15 +136,79 @@ def train_in_segments(model, loss_function, optimiser, logger, epochs, data_slid
                 optimiser.step()
 
                 # print(f'\tLoss: {loss}')
-                losses.append(loss.cpu().detach().numpy())
-                print(f'Epoch: {epoch} -- Batch: {idx} of {int(len(s_training_loader.dataset)/TRAIN_BATCH_SIZE)} -- Average Loss: {np.average(losses)} -- Progress: {round(((idx+1)*100)/int(len(s_training_loader.dataset)/TRAIN_BATCH_SIZE), 2)}%       ', end='\r', flush=True)
+                training_losses.append(loss.cpu().detach().numpy())
+                print(f'Epoch: {epoch} -- Training batch: {idx+1} of {int(len(s_training_loader.dataset)/TRAIN_BATCH_SIZE)} -- Average Loss: {np.average(training_losses)} -- Progress: {round(((idx+1)*100)/int(len(s_training_loader.dataset)/TRAIN_BATCH_SIZE), 2)}%       ', end='\r', flush=True)
             print('\n')
 
             start_segment += data_slider_fraction
                 
+        start_segment = 0
+        segment_num = 0
+
+        model.eval()
+
+        pred_true = []
+
+        # Validation loop
+        while start_segment < 1:
+            segment_num += 1
+            print(f'Validation segment {segment_num} of {math.ceil(1/data_slider_fraction)}')
+            end_segment = start_segment+data_slider_fraction
+            if end_segment > 1:
+                end_segment = 1
+
+            s_val_data = LocalDataset(os.path.join(os.getcwd(), 'dataset', 'val'), gray_scale=gray_scale, start_segment=start_segment, end_segment=end_segment).load_dataset()
+            s_batch = BasketballVideos(s_val_data)
+            s_val_loader = DataLoader(s_batch, **train_params)
+
+            for idx, batch in enumerate(s_val_loader):
+
+                model.zero_grad()
+                
+                x = batch['videos']
+
+                y = batch['labels']
+
+                #print(f'x Shape: {x.shape}')
+
+                x = x.to(device)
+                y = y.to(device)
+
+                logits = model(x)
+
+                logits = logits.to(device)
+
+                #y = torch.tensor(y, dtype = torch.long)
+
+                loss = loss_function(logits, y)
+                # loss.backward()
+                # optimiser.step()
+                y_pred = torch.softmax(logits, dim = 1)
+                y_pred = torch.argmax(y_pred, dim = 1)
+
+                for p_idx, pred in enumerate(y_pred):
+                    pred_true.append((pred, y[p_idx]))
+
+                # print(f'\tLoss: {loss}')
+                eval_losses.append(loss.cpu().detach().numpy())
+                print(f'Epoch: {epoch} -- Validation batch: {idx+1} of {int(len(s_val_loader.dataset)/TRAIN_BATCH_SIZE)} -- Average Loss: {np.average(eval_losses)} -- Progress: {round(((idx+1)*100)/int(len(s_val_loader.dataset)/TRAIN_BATCH_SIZE), 2)}%       ', end='\r', flush=True)
+            print('\n')
+
+            start_segment += data_slider_fraction
+        
+        correct = 0
+        for pred in pred_true:
+            # print(pred[0], pred[1])
+            if pred[0] == pred[1]:
+                correct += 1
+
         torch.save(model.state_dict(), os.path.join(checkpoint_dir, f'grayscale_epoch_{epoch}_s_{data_slider_fraction}'))
 
-        logger.log({'train_loss': np.average(losses)})
+        logger.log({
+            'train_loss': np.average(training_losses),
+            'eval_loss': np.average(eval_losses),
+            'epoch_acc': correct/len(pred_true)
+            })
 
 # ===========  Call the functions here ================================================================
 
@@ -163,11 +228,11 @@ print('hello?')
 
 model.to(device)
 
-wandb_logger = Logger(f"inm705_cw_initial_model_decay", project='INM705_CW')
+wandb_logger = Logger(f"inm705_cw_grayscale_model_decay", project='INM705_CW')
 logger = wandb_logger.get_logger()
 
 # train_model(model, training_loader, loss_function, optimiser, logger, epochs)
 
 # implement segmented loader
 
-train_in_segments(model, loss_function, optimiser, logger, epochs, 0.02)
+train_in_segments(model, loss_function, optimiser, logger, epochs, 0.04, gray_scale=True)

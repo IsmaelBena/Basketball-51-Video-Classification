@@ -9,12 +9,12 @@ class BaselineModel(nn.Module):
 
         # Initial kernel dims: stride=9, d=18 h=24, w=32
 
-        self.conv1 = nn.Conv3d(in_channels = 3, out_channels = 4, kernel_size = (18, 24, 32), stride = 9, device = device) # output shape: d=19, h=25, w=33
+        self.conv1 = nn.Conv3d(in_channels = 3, out_channels = 4, kernel_size = (9, 24, 32), stride = 9, device = device) # output shape: d=19, h=25, w=33
         self.act1 = nn.ReLU()
         self.pool1 = nn.MaxPool3d((2, 3, 3), stride = 1)
 
 
-        self.conv2 = nn.Conv3d(in_channels = 4, out_channels = 5, kernel_size = (4, 5, 7), stride = 2, device = device) # output shape: d=7, h=11, w=14
+        self.conv2 = nn.Conv3d(in_channels = 4, out_channels = 5, kernel_size = (2, 5, 7), stride = 2, device = device) # output shape: d=7, h=11, w=14
         self.act2 = nn.ReLU()
         self.pool2 = nn.MaxPool3d((1, 3, 4), stride = 1)
 
@@ -26,7 +26,7 @@ class BaselineModel(nn.Module):
         #     nn.Linear(256, 8)
         # )
 
-        self.lstm = nn.LSTM(3200, 256, device = device)
+        self.lstm = nn.LSTM(1600, 256, device = device)
         self.linear = nn.Linear(256, 8, device = device)
 
         

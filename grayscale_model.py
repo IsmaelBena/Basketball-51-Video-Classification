@@ -4,11 +4,11 @@ class GrayscaleModel(nn.Module):
     def __init__(self, device):
         super(GrayscaleModel, self).__init__()
 
-        self.conv1 = nn.Conv2d(in_channels = 180, out_channels = 60, kernel_size = (24, 32), stride = 9, device = device) # output shape: d=19, h=25, w=33
+        self.conv1 = nn.Conv2d(in_channels = 90, out_channels = 50, kernel_size = (24, 32), stride = 9, device = device) # output shape: d=19, h=25, w=33
         self.act1 = nn.ReLU()
         self.pool1 = nn.MaxPool2d((3, 3), stride = 1)
 
-        self.conv2 = nn.Conv2d(in_channels = 60, out_channels = 5, kernel_size = (5, 7), stride = 2, device = device) # output shape: d=7, h=11, w=14
+        self.conv2 = nn.Conv2d(in_channels = 50, out_channels = 5, kernel_size = (5, 7), stride = 2, device = device) # output shape: d=7, h=11, w=14
         self.act2 = nn.ReLU()
         self.pool2 = nn.MaxPool2d((3, 4), stride = 1)
 
