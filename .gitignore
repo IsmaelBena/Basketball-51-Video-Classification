@@ -3,7 +3,9 @@ basketball_classification_env/
 
 # video dataset
 dataset/
-unclean_dataset/
+padded_dataset/
+raw_dataset/
+trimmed_dataset/
 
 #checkpoints
 checkpoints/

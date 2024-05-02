@@ -1,6 +1,8 @@
 data_settings:
   data_dir: "dataset"
-  unclean_data_dir: "unclean_dataset"
+  raw_data_dir: "raw_dataset"
+  trimmed_data_dir: "trimmed_dataset"
+  padded_data_dir: "padded_dataset"
   train_batch_size: 20
 model_settings:
   epochs: 10
