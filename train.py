@@ -9,6 +9,7 @@ import math
 
 from baseline_model import BaselineModel
 from grayscale_model import GrayscaleModel
+from vgg16_model import VGGModel
 from logger import Logger
 
 # ========= PARAMS ==============================================================================================================
@@ -84,7 +85,7 @@ def train_model(model, training_loader, loss_function, optimiser, logger, epochs
 
 # =================  Training function that reads the data segments at a time, takes longer but saves on memory.  ===============
 
-def train_in_segments(model, loss_function, optimiser, logger, epochs, data_slider_fraction, checkpoint_name='', gray_scale=False):
+def train_in_segments(model, loss_function, optimiser, logger, epochs, data_slider_fraction, save_checkpoint_name='', checkpoint_name='', gray_scale=False, lr=0.5, decay=0.01):
     print("Starting segmented training")
     if checkpoint_name != '':
         model.load_state_dict(torch.load(os.path.join(checkpoint_dir, checkpoint_name)))
@@ -202,7 +203,10 @@ def train_in_segments(model, loss_function, optimiser, logger, epochs, data_slid
             if pred[0] == pred[1]:
                 correct += 1
 
-        torch.save(model.state_dict(), os.path.join(checkpoint_dir, f'grayscale_epoch_{epoch}_s_{data_slider_fraction}'))
+        if save_checkpoint_name == '':
+            torch.save(model.state_dict(), os.path.join(checkpoint_dir, f'grayscale_s_{data_slider_fraction}'))
+        else:
+            torch.save(model.state_dict(), os.path.join(checkpoint_dir, f'basemodel_lr_{lr}_decay_{decay}'))
 
         logger.log({
             'train_loss': np.average(training_losses),
@@ -217,22 +221,25 @@ def train_in_segments(model, loss_function, optimiser, logger, epochs, data_slid
 # training_loader = DataLoader(training_set, **train_params)
 # print(len(training_loader.dataset))
 
-#model = BaselineModel(device)
-model = GrayscaleModel(device)
+# model = BaselineModel(device)
+# model = GrayscaleModel(device)
+# model = VGGModel(device)
 
 loss_function = torch.nn.CrossEntropyLoss()
-optimiser = torch.optim.Adam(model.parameters(), lr = 0.5, weight_decay = 0.01)
 
-#print(training_loader.dataset[0])
-print('hello?')
+lrs = [0.2, 0.1, 0.05]
+decays = [0.01, 0.001, 0.0001]
+for lr in lrs:
+    for decay in decays:
+        model = BaselineModel(device)
+        optimiser = torch.optim.Adam(model.parameters(), lr = lr, weight_decay = decay)
+        wandb_logger = Logger(f"inm705_cw_vgg_model_test_{lr}_{decay}", project='INM705_CW')
+        logger = wandb_logger.get_logger()
+        model.to(device)
+        print(f'LR: {lr} - DECAY: {decay}')
+        train_in_segments(model, loss_function, optimiser, logger, epochs, 0.04, gray_scale=False, lr=lr, decay=decay)
 
-model.to(device)
-
-wandb_logger = Logger(f"inm705_cw_grayscale_model_decay", project='INM705_CW')
-logger = wandb_logger.get_logger()
 
 # train_model(model, training_loader, loss_function, optimiser, logger, epochs)
 
 # implement segmented loader
-
-train_in_segments(model, loss_function, optimiser, logger, epochs, 0.04, gray_scale=True)
