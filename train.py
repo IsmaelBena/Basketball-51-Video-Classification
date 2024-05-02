@@ -8,12 +8,13 @@ from utils import get_config
 import math
 
 from baseline_model import BaselineModel
+from grayscale_model import GrayscaleModel
 from logger import Logger
 
 # ========= PARAMS ===========
 
 TRAIN_BATCH_SIZE = 2
-epochs = 2
+epochs = 5
 
 train_params = {'batch_size': TRAIN_BATCH_SIZE,
                 'shuffle': True,
@@ -31,19 +32,19 @@ print(f'Device: {device}')
 
 # ============================
 
-# data = LocalDataset(os.path.join(os.getcwd(), 'dataset'), 0, 0.02).load_dataset()
-
 checkpoint_dir = os.path.join(os.getcwd(), get_config("model")["checkpoint_dir"])
 
+
+# data = LocalDataset(os.path.join(os.getcwd(), 'dataset'), True).load_dataset()
 # training_set = BasketballVideos(data)
-
 # training_loader = DataLoader(training_set, **train_params)
-
 # print(len(training_loader.dataset))
 
-model = BaselineModel(device)
+#model = BaselineModel(device)
+model = GrayscaleModel(device)
+
 loss_function = torch.nn.CrossEntropyLoss()
-optimiser = torch.optim.Adam(model.parameters(), lr = 0.1, weight_decay = 0.0)
+optimiser = torch.optim.Adam(model.parameters(), lr = 1.0, weight_decay = 0.01)
 
 #print(training_loader.dataset[0])
 print('hello?')
@@ -89,7 +90,7 @@ def train_model(model, training_loader, loss_function, optimiser, logger, epochs
 
         logger.log({'train_loss': np.average(losses)})
 
-wandb_logger = Logger(f"inm705_cw_initial_model", project='INM705_CW')
+wandb_logger = Logger(f"inm705_cw_grayscale_model", project='INM705_CW')
 logger = wandb_logger.get_logger()
 
 # train_model(model, training_loader, loss_function, optimiser, logger, epochs)
@@ -119,15 +120,13 @@ def train_in_segments(model, loss_function, optimiser, logger, epochs, data_slid
             if end_segment > 1:
                 end_segment = 1
 
-            s_data = LocalDataset(os.path.join(os.getcwd(), 'dataset'), start_segment=start_segment, end_segment=end_segment).load_dataset()
+            s_data = LocalDataset(os.path.join(os.getcwd(), 'dataset'), gray_scale=True, start_segment=start_segment, end_segment=end_segment).load_dataset()
             s_batch = BasketballVideos(s_data)
             s_training_loader = DataLoader(s_batch, **train_params)
 
             for idx, batch in enumerate(s_training_loader):
 
                 model.zero_grad()
-
-                print(f'Epoch: {epoch}, Batch {idx} of {int(len(s_training_loader.dataset)/TRAIN_BATCH_SIZE)}')
                 
                 x = batch['videos']
 
@@ -148,13 +147,15 @@ def train_in_segments(model, loss_function, optimiser, logger, epochs, data_slid
                 loss.backward()
                 optimiser.step()
 
-                print(f'\tLoss: {loss}')
+                #print(f'\tLoss: {loss}')
                 losses.append(loss.cpu().detach().numpy())
+                print(f'Epoch: {epoch} -- Batch: {idx} of {int(len(s_training_loader.dataset)/TRAIN_BATCH_SIZE)} -- Average Loss: {np.average(losses)} -- Progress: {round(((idx+1)*100)/int(len(s_training_loader.dataset)/TRAIN_BATCH_SIZE), 2)}%       ', end='\r', flush=True)
+            print('\n')
 
             start_segment += data_slider_fraction
                 
-        torch.save(model.state_dict(), os.path.join(checkpoint_dir, f'base_epoch_{epoch}_s_{data_slider_fraction}'))
+        torch.save(model.state_dict(), os.path.join(checkpoint_dir, f'grayscale_epoch_{epoch}_s_{data_slider_fraction}'))
 
         logger.log({'train_loss': np.average(losses)})
 
-train_in_segments(model, loss_function, optimiser, logger, epochs, 0.02, checkpoint_name='base_epoch_0_s_0.02')
+train_in_segments(model, loss_function, optimiser, logger, epochs, 0.02)

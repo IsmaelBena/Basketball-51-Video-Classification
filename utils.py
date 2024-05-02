@@ -26,8 +26,9 @@ def pad_dataset(unclean_dir, clean_dir, fraction = 1):
 
     for target in targets:
         files = [file for file in os.listdir(unclean_data_dir + target)]
-
+        print(f'Checking Label: {target}')
         for index, file in enumerate(files):
+            print(f'Checking file: {file}                    ---           {round(((index+1)*100)/len(files), 2)}%', end='\r', flush=True)
             if index/len(files) > fraction:
                 break
             else:
@@ -56,9 +57,11 @@ def pad_dataset(unclean_dir, clean_dir, fraction = 1):
         if not os.path.exists(f'{original_wd}\\dataset\\{target}'):
             os.makedirs(f'{original_wd}\\dataset\\{target}')
 
+        print(f'Padding Label: {target}')
 
         os.chdir(f'{original_wd}\\dataset\\{target}')
         for index, file in enumerate(files):
+            print(f'Padding file: {file}                    ---           {round(((index+1)*100)/len(files), 2)}%', end='\r', flush=True)
             if index/len(files) > fraction:
                 break
             else:
