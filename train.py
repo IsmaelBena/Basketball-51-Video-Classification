@@ -8,6 +8,7 @@ from utils import get_config
 import math
 
 from baseline_model import BaselineModel
+from grayscale_model import GrayscaleModel
 from logger import Logger
 
 # ========= PARAMS ===========
@@ -31,17 +32,17 @@ print(f'Device: {device}')
 
 # ============================
 
-# data = LocalDataset(os.path.join(os.getcwd(), 'dataset'), 0, 0.02).load_dataset()
-
 checkpoint_dir = os.path.join(os.getcwd(), get_config("model")["checkpoint_dir"])
 
+
+# data = LocalDataset(os.path.join(os.getcwd(), 'dataset'), True).load_dataset()
 # training_set = BasketballVideos(data)
-
 # training_loader = DataLoader(training_set, **train_params)
-
 # print(len(training_loader.dataset))
 
-model = BaselineModel(device)
+#model = BaselineModel(device)
+model = GrayscaleModel(device)
+
 loss_function = torch.nn.CrossEntropyLoss()
 optimiser = torch.optim.Adam(model.parameters(), lr = 0.5, weight_decay = 0.01)
 
@@ -119,7 +120,7 @@ def train_in_segments(model, loss_function, optimiser, logger, epochs, data_slid
             if end_segment > 1:
                 end_segment = 1
 
-            s_data = LocalDataset(os.path.join(os.getcwd(), 'dataset'), start_segment=start_segment, end_segment=end_segment).load_dataset()
+            s_data = LocalDataset(os.path.join(os.getcwd(), 'dataset'), gray_scale=True, start_segment=start_segment, end_segment=end_segment).load_dataset()
             s_batch = BasketballVideos(s_data)
             s_training_loader = DataLoader(s_batch, **train_params)
 
@@ -153,7 +154,7 @@ def train_in_segments(model, loss_function, optimiser, logger, epochs, data_slid
 
             start_segment += data_slider_fraction
                 
-        torch.save(model.state_dict(), os.path.join(checkpoint_dir, f'base_epoch_{epoch}_s_{data_slider_fraction}'))
+        torch.save(model.state_dict(), os.path.join(checkpoint_dir, f'grayscale_epoch_{epoch}_s_{data_slider_fraction}'))
 
         logger.log({'train_loss': np.average(losses)})
 
