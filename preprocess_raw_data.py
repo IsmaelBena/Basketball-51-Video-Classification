@@ -14,6 +14,8 @@ gen_csv(trimmed_data_dir, f'{trimmed_data_dir}_metadata')
 pad_dataset(trimmed_data_dir, padded_data_dir, f'{trimmed_data_dir}_metadata')
 
 gen_csv(padded_data_dir, f'{padded_data_dir}_metadata')
-split_train_val_test(0.6, 0.2, 0.2, trimmed_data_dir, dataset_dir, f'{padded_data_dir}_metadata')
+split_train_val_test(0.6, 0.2, 0.2, padded_data_dir, dataset_dir, f'{padded_data_dir}_metadata')
 
-gen_csv(dataset_dir, f'{dataset_dir}_metadata')
+gen_csv(os.path.join(dataset_dir, "train"), f'{dataset_dir}_train_metadata')
+gen_csv(os.path.join(dataset_dir, "val"), f'{dataset_dir}_val_metadata')
+gen_csv(os.path.join(dataset_dir, "test"), f'{dataset_dir}_test_metadata')
