@@ -6,6 +6,7 @@ dataset/
 padded_dataset/
 raw_dataset/
 trimmed_dataset/
+old_dataset/
 
 #checkpoints
 checkpoints/

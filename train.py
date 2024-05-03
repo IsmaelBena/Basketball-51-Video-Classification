@@ -7,7 +7,8 @@ import yaml
 from utils import get_config
 import math
 import pickle
-from seqeval.metrics import classification_report
+from sklearn.metrics import classification_report
+from sklearn.metrics import confusion_matrix
 from itertools import chain
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -15,10 +16,11 @@ import wandb
 import pandas as pd
 import sklearn
 
-from baseline_model import BaselineModel
+from baseline_model_new import NewBaselineModel
 from grayscale_model import GrayscaleModel
 from vgg16_model import VGGModel
 from logger import Logger
+from optical_fusion_model import OpticalFusionModel
 
 # ========= PARAMS ==============================================================================================================
 
@@ -93,7 +95,7 @@ def train_model(model, training_loader, loss_function, optimiser, logger, epochs
 
 # =================  Training function that reads the data segments at a time, takes longer but saves on memory.  ===============
 
-def train_in_segments(model, loss_function, optimiser, logger, epochs, data_slider_fraction, save_checkpoint_name='', checkpoint_name='', gray_scale=False, lr=0.5, decay=0.01):
+def train_in_segments(model, loss_function, optimiser, logger, epochs, data_slider_fraction, save_checkpoint_name='', checkpoint_name='', gray_scale=False, dense_optical_flow=False, lr=0.5, decay=0.01):
     print("Starting segmented training")
     if checkpoint_name != '':
         model.load_state_dict(torch.load(os.path.join(checkpoint_dir, checkpoint_name)))
@@ -117,8 +119,8 @@ def train_in_segments(model, loss_function, optimiser, logger, epochs, data_slid
             if end_segment > 1:
                 end_segment = 1
 
-            s_training_data = LocalDataset(os.path.join(os.getcwd(), 'dataset', 'train'), gray_scale=gray_scale, start_segment=start_segment, end_segment=end_segment).load_dataset()
-            s_batch = BasketballVideos(s_training_data)
+            s_training_data = LocalDataset(os.path.join(os.getcwd(), 'dataset', 'train'), gray_scale=gray_scale, dense_optical_flow=dense_optical_flow, start_segment=start_segment, end_segment=end_segment).load_dataset()
+            s_batch = BasketballVideos(s_training_data, optical_on=dense_optical_flow)
             s_training_loader = DataLoader(s_batch, **train_params)
 
             for idx, batch in enumerate(s_training_loader):
@@ -126,15 +128,22 @@ def train_in_segments(model, loss_function, optimiser, logger, epochs, data_slid
                 model.zero_grad()
                 
                 x = batch['videos']
-
                 y = batch['labels']
+                if dense_optical_flow:
+                    #print(batch)
+                    o = batch['optical_flow']
+                    print(f'x = {x.shape}')
+                    print(f'o = {o.shape}')
 
                 #print(f'x Shape: {x.shape}')
-
                 x = x.to(device)
                 y = y.to(device)
-
-                logits = model(x)
+                if dense_optical_flow:
+                    o = o.to(device)
+                    logits = model(x, o)
+                
+                else:
+                    logits = model(x)
 
                 logits = logits.to(device)
 
@@ -173,17 +182,21 @@ def train_in_segments(model, loss_function, optimiser, logger, epochs, data_slid
             for idx, batch in enumerate(s_val_loader):
 
                 model.zero_grad()
-                
-                x = batch['videos']
 
+                x = batch['videos']
                 y = batch['labels']
+                if dense_optical_flow:
+                    o = batch['optical_flow']
 
                 #print(f'x Shape: {x.shape}')
-
                 x = x.to(device)
                 y = y.to(device)
-
-                logits = model(x)
+                if dense_optical_flow:
+                    o = o.to(device)
+                    logits = model(x, o)
+                
+                else:
+                    logits = model(x)
 
                 logits = logits.to(device)
 
@@ -212,9 +225,9 @@ def train_in_segments(model, loss_function, optimiser, logger, epochs, data_slid
                 correct += 1
 
         if save_checkpoint_name == '':
-            torch.save(model.state_dict(), os.path.join(checkpoint_dir, f'grayscale_s_{data_slider_fraction}'))
+            torch.save(model.state_dict(), os.path.join(checkpoint_dir, f'temp_model'))
         else:
-            torch.save(model.state_dict(), os.path.join(checkpoint_dir, f'basemodel_lr_{lr}_decay_{decay}'))
+            torch.save(model.state_dict(), os.path.join(checkpoint_dir, f'{save_checkpoint_name}_{lr}_{decay}'))
 
         logger.log({
             'train_loss': np.average(training_losses),
@@ -226,7 +239,7 @@ def train_in_segments(model, loss_function, optimiser, logger, epochs, data_slid
 
 # =================  Testing function that reads the data segments at a time.  ===============
 
-def test_in_segments(model, logger, data_slider_fraction, save_checkpoint_name='', gray_scale=False, lr=0.5, decay=0.01):
+def test_in_segments(model, logger, data_slider_fraction, save_checkpoint_name='', gray_scale=False, dense_optical_flow=False, lr=0.5, decay=0.01):
     model.eval()
 
     pred_true = []
@@ -245,8 +258,8 @@ def test_in_segments(model, logger, data_slider_fraction, save_checkpoint_name='
         if end_segment > 1:
             end_segment = 1
 
-        s_test_data = LocalDataset(os.path.join(os.getcwd(), 'dataset', 'test'), gray_scale=gray_scale, start_segment=start_segment, end_segment=end_segment).load_dataset()
-        s_batch = BasketballVideos(s_test_data)
+        s_test_data = LocalDataset(os.path.join(os.getcwd(), 'dataset', 'test'), gray_scale=gray_scale, dense_optical_flow=dense_optical_flow, start_segment=start_segment, end_segment=end_segment).load_dataset()
+        s_batch = BasketballVideos(s_test_data, optical_on=dense_optical_flow)
         s_test_loader = DataLoader(s_batch, **train_params)
 
         for idx, batch in enumerate(s_test_loader):
@@ -255,13 +268,18 @@ def test_in_segments(model, logger, data_slider_fraction, save_checkpoint_name='
             
             x = batch['videos']
             y = batch['labels']
+            if dense_optical_flow:
+                o = batch['optical_flow']
 
             #print(f'x Shape: {x.shape}')
-
             x = x.to(device)
             y = y.to(device)
-
-            logits = model(x)
+            if dense_optical_flow:
+                o = o.to(device)
+                logits = model(x, o)
+            
+            else:
+                logits = model(x)
 
             logits = logits.to(device)
 
@@ -289,22 +307,6 @@ def test_in_segments(model, logger, data_slider_fraction, save_checkpoint_name='
         if pred[0] == pred[1]:
             correct += 1
 
-    new_true_labels = []
-    new_pred_labels = []
-
-    # for labels in true_labels:
-    #     print(labels)
-    #     print(type(labels))
-    #     for label in labels:
-    #         new_true_labels.append(label)
-
-    # for labels in pred_labels:
-    #     for label in labels:
-    #         new_pred_labels.append(label)
-
-    # new_true_labels = [label for labels in true_labels for label in labels]
-    # new_pred_labels = [label for labels in pred_labels for label in labels]
-
     labels = ['2p0', '2p1', '3p0', '3p1', 'ft0', 'ft1', 'mp0', 'mp1']
 
     true_labels = sum(true_labels, [])
@@ -313,22 +315,19 @@ def test_in_segments(model, logger, data_slider_fraction, save_checkpoint_name='
     new_true_labels = [labels[label] for label in true_labels]
     new_pred_labels = [labels[label] for label in pred_labels]
 
-    print(new_true_labels)
-    print(new_pred_labels)
+    report = classification_report(new_true_labels, new_pred_labels, labels=labels, output_dict = True, zero_division = 0)
+    print(f'classification_report:\n{classification_report(new_true_labels, new_pred_labels, labels=labels, output_dict = False, zero_division = 0)}')
 
-    report = classification_report([new_true_labels], [new_pred_labels], output_dict = True, zero_division = 0)
-    print(f'classification_report:\n{classification_report([new_true_labels], [new_pred_labels], output_dict = False, zero_division = 0)}')
+    matrix = confusion_matrix(new_true_labels, new_pred_labels, labels=labels)
 
-    # plt.figure(figsize = (15, 30))
     ax = sns.heatmap(pd.DataFrame(report).iloc[:-1, :].T, cmap = 'coolwarm', annot=True)
     plt.tight_layout()
-
     logger.log({'classification_report': wandb.Image(ax.figure)})
+    plt.close()
 
-    if save_checkpoint_name == '':
-        torch.save(model.state_dict(), os.path.join(checkpoint_dir, f'grayscale_s_{data_slider_fraction}'))
-    else:
-        torch.save(model.state_dict(), os.path.join(checkpoint_dir, f'basemodel_lr_{lr}_decay_{decay}'))
+    ax1 = sns.heatmap(matrix/np.sum(matrix), cmap = 'Blues', annot=True, xticklabels=labels, yticklabels=labels, fmt='.2f')
+    logger.log({'confusion_matrix': wandb.Image(ax1.figure)})
+    plt.close()
 
     logger.log({
         'test_acc': correct/len(pred_true)
@@ -340,18 +339,27 @@ def test_in_segments(model, logger, data_slider_fraction, save_checkpoint_name='
 # training_loader = DataLoader(training_set, **train_params)
 # print(len(training_loader.dataset))
 
-# model = BaselineModel(device)
+# model = NewBaselineModel(device)
+model = OpticalFusionModel(device)
 # model = GrayscaleModel(device)
-model = VGGModel(device)
+# model = VGGModel(device)
+
+# s_test_data = LocalDataset(os.path.join(os.getcwd(), 'dataset', 'test'), gray_scale=False, dense_optical_flow=True, start_segment=0, end_segment=0.01).load_dataset()
 
 loss_function = torch.nn.CrossEntropyLoss()
 
 # lrs = [0.2, 0.1, 0.05]
 # decays = [0.01, 0.001, 0.0001]
 
-lrs = [0.1]
-decays = [0.0001]
+lr = 0.2
+decay = 0.0001
 
+optimiser = torch.optim.Adam(model.parameters(), lr = lr, weight_decay = decay)
+
+wandb_logger = Logger(f"inm705_cw_optical_model_train_{lr}_{decay}", project='INM705_CW')
+logger = wandb_logger.get_logger()
+
+train_in_segments(model, loss_function, optimiser, logger, epochs, 0.1, save_checkpoint_name='optical_fusion_model', gray_scale=False, dense_optical_flow=True, lr=lr, decay=decay)
 # for lr in lrs:
 #     for decay in decays:
 
@@ -371,7 +379,7 @@ decays = [0.0001]
 #         print("saving model")
 #         with open(f'./greyscale_model_test_{lr}_{decay}.pkl', 'wb') as file:
 #             pickle.dump(model, file)
-
+#============
 lr = 0.1
 decay = 0.0001
 
@@ -382,8 +390,8 @@ with open(f'./greyscale_model_test_{lr}_{decay}.pkl', 'rb') as file:
 wandb_logger = Logger(f"inm705_cw_greyscale_model_test_{lr}_{decay}", project='INM705_CW')
 logger = wandb_logger.get_logger()
 
-test_in_segments(model, logger, 0.04, save_checkpoint_name='', gray_scale=True, lr=0.5, decay=0.01)
-
+test_in_segments(model, logger, 0.1, save_checkpoint_name='', gray_scale=False, lr=lr, decay=decay)
+#==================
 # train_model(model, training_loader, loss_function, optimiser, logger, epochs)
 
 # implement segmented loader

@@ -8,8 +8,8 @@ raw_data_dir = data_settings['raw_data_dir']
 trimmed_data_dir = data_settings['trimmed_data_dir']
 padded_data_dir = data_settings['padded_data_dir']
 
-gen_csv(raw_data_dir, f'{raw_data_dir}_metadata')
-remove_frames(raw_data_dir, trimmed_data_dir, 2, f'{raw_data_dir}_metadata')
+#gen_csv(raw_data_dir, f'{raw_data_dir}_metadata')
+remove_frames(raw_data_dir, trimmed_data_dir, 2, (64, 64), f'{raw_data_dir}_metadata')
 
 gen_csv(trimmed_data_dir, f'{trimmed_data_dir}_metadata')
 pad_dataset(trimmed_data_dir, padded_data_dir, f'{trimmed_data_dir}_metadata')

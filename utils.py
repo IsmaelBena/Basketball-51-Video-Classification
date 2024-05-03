@@ -75,7 +75,7 @@ def gen_csv(target_folder_name, csv_name):
 
 
 
-def remove_frames(dataset_dir, output_dir, divide_by, metadata_file=''):
+def remove_frames(dataset_dir, output_dir, divide_by, new_res, metadata_file=''):
     original_wd = os.getcwd()
     original_dir = os.path.join(original_wd, dataset_dir)
     generated_dir = os.path.join(original_wd, output_dir)
@@ -120,7 +120,7 @@ def remove_frames(dataset_dir, output_dir, divide_by, metadata_file=''):
             print(f' - Removing frames from video: {file}                    ---           {round(((index+1)*100)/len(files), 2)}%', end='\r', flush=True)
             frames = []
             fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-            output = cv2.VideoWriter(f'{Path(file).stem}_t_{divide_by}.avi', fourcc, fps, (frame_width, frame_height))
+            output = cv2.VideoWriter(f'{Path(file).stem}_t_{divide_by}.avi', fourcc, fps, (new_res[0], new_res[1]))
             cap=cv2.VideoCapture(os.path.join(original_dir, target, file))
             frame_num = 0
             while cap.isOpened():
@@ -129,7 +129,8 @@ def remove_frames(dataset_dir, output_dir, divide_by, metadata_file=''):
                     break
                 else:
                     if (frame_num % divide_by == 0):
-                        frames.append(frame)
+                        resized_frame = cv2.resize(frame, new_res)
+                        frames.append(resized_frame)
                     frame_num += 1
 
             for frame in frames:
@@ -216,7 +217,7 @@ def pad_dataset(dataset_dir, output_dir, metadata_filename):
                 output.write(frame)
 
             if len(frames) < most_frames:
-                padding_frames = np.zeros((most_frames - len(frames), 240, 320, 3))
+                padding_frames = np.zeros((most_frames - len(frames), frame_width, frame_height, 3))
                 for padding in padding_frames:
                     output.write(padding)
 
