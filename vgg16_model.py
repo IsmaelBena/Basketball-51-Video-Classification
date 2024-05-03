@@ -12,7 +12,7 @@ class VGGModel(nn.Module):
 
         dropout=0.2
         self.transfer_vgg16.classifier = nn.Sequential(
-            nn.Flatten(start_dim=3, end_dim=-1),
+            nn.Flatten(start_dim=2, end_dim=-1),
             nn.LSTM(6912000, 256, device = device),
             nn.Linear(256, 8)
         ).to(device)

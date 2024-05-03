@@ -223,22 +223,21 @@ def train_in_segments(model, loss_function, optimiser, logger, epochs, data_slid
 
 # model = BaselineModel(device)
 # model = GrayscaleModel(device)
-# model = VGGModel(device)
+model = VGGModel(device)
 
 loss_function = torch.nn.CrossEntropyLoss()
 
-lrs = [0.2, 0.1, 0.05]
-decays = [0.01, 0.001, 0.0001]
-for lr in lrs:
-    for decay in decays:
-        model = BaselineModel(device)
-        optimiser = torch.optim.Adam(model.parameters(), lr = lr, weight_decay = decay)
-        wandb_logger = Logger(f"inm705_cw_vgg_model_test_{lr}_{decay}", project='INM705_CW')
-        logger = wandb_logger.get_logger()
-        model.to(device)
-        print(f'LR: {lr} - DECAY: {decay}')
-        train_in_segments(model, loss_function, optimiser, logger, epochs, 0.04, gray_scale=False, lr=lr, decay=decay)
+# lrs = [0.2, 0.1, 0.05]
+# decays = [0.01, 0.001, 0.0001]
+# for lr in lrs:
+#     for decay in decays:
 
+optimiser = torch.optim.Adam(model.parameters(), lr = 0.2, weight_decay = 0.01)
+wandb_logger = Logger(f"inm705_cw_vgg_model_testing", project='INM705_CW')
+logger = wandb_logger.get_logger()
+model.to(device)
+# print(f'LR: {lr} - DECAY: {decay}')
+train_in_segments(model, loss_function, optimiser, logger, epochs, 0.04, gray_scale=False)
 
 # train_model(model, training_loader, loss_function, optimiser, logger, epochs)
 
