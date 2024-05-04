@@ -17,6 +17,7 @@ import pandas as pd
 import sklearn
 
 from baseline_model_new import NewBaselineModel
+from cnn_only_model import CNNModel
 from grayscale_model import GrayscaleModel
 from vgg16_model import VGGModel
 from logger import Logger
@@ -132,8 +133,8 @@ def train_in_segments(model, loss_function, optimiser, logger, epochs, data_slid
                 if dense_optical_flow:
                     #print(batch)
                     o = batch['optical_flow']
-                    print(f'x = {x.shape}')
-                    print(f'o = {o.shape}')
+                    # print(f'x = {x.shape}')
+                    # print(f'o = {o.shape}')
 
                 #print(f'x Shape: {x.shape}')
                 x = x.to(device)
@@ -175,8 +176,8 @@ def train_in_segments(model, loss_function, optimiser, logger, epochs, data_slid
             if end_segment > 1:
                 end_segment = 1
 
-            s_val_data = LocalDataset(os.path.join(os.getcwd(), 'dataset', 'val'), gray_scale=gray_scale, start_segment=start_segment, end_segment=end_segment).load_dataset()
-            s_batch = BasketballVideos(s_val_data)
+            s_val_data = LocalDataset(os.path.join(os.getcwd(), 'dataset', 'val'), gray_scale=gray_scale, dense_optical_flow=dense_optical_flow, start_segment=start_segment, end_segment=end_segment).load_dataset()
+            s_batch = BasketballVideos(s_val_data, optical_on=dense_optical_flow)
             s_val_loader = DataLoader(s_batch, **train_params)
 
             for idx, batch in enumerate(s_val_loader):
@@ -340,14 +341,14 @@ def test_in_segments(model, logger, data_slider_fraction, save_checkpoint_name='
 # print(len(training_loader.dataset))
 
 # model = NewBaselineModel(device)
-model = OpticalFusionModel(device)
+# model = OpticalFusionModel(device)
 # model = GrayscaleModel(device)
 # model = VGGModel(device)
+model = CNNModel(device)
 
 # s_test_data = LocalDataset(os.path.join(os.getcwd(), 'dataset', 'test'), gray_scale=False, dense_optical_flow=True, start_segment=0, end_segment=0.01).load_dataset()
 
 loss_function = torch.nn.CrossEntropyLoss()
-
 # lrs = [0.2, 0.1, 0.05]
 # decays = [0.01, 0.001, 0.0001]
 
@@ -356,10 +357,10 @@ decay = 0.0001
 
 optimiser = torch.optim.Adam(model.parameters(), lr = lr, weight_decay = decay)
 
-wandb_logger = Logger(f"inm705_cw_optical_model_train_{lr}_{decay}", project='INM705_CW')
+wandb_logger = Logger(f"inm705_cw_cnn_model_relu_train_{lr}_{decay}", project='INM705_CW')
 logger = wandb_logger.get_logger()
 
-train_in_segments(model, loss_function, optimiser, logger, epochs, 0.1, save_checkpoint_name='optical_fusion_model', gray_scale=False, dense_optical_flow=True, lr=lr, decay=decay)
+train_in_segments(model, loss_function, optimiser, logger, epochs, 0.1, save_checkpoint_name='cnn_model', gray_scale=False, dense_optical_flow=False, lr=lr, decay=decay)
 # for lr in lrs:
 #     for decay in decays:
 

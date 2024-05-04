@@ -53,8 +53,8 @@ class OpticalFusionModel(nn.Module):
         self.linear = nn.Linear(512, 8, device = device)
 
     def forward(self, i_input, o_input):
-        print(f'input: {i_input.shape}')
-        print(f'input: {o_input.shape}')
+        # print(f'input: {i_input.shape}')
+        # print(f'input: {o_input.shape}')
 
         ix = self.iconv1(i_input)
         ix = self.ipool1(ix)
@@ -92,15 +92,15 @@ class OpticalFusionModel(nn.Module):
 
         ix, _ = self.ilstm(ix.view(len(i_input), 1, -1))
         ox, _ = self.olstm(ox.view(len(o_input), 1, -1))
-        print(f'lstm1: {ix.shape}')
-        print(f'lstm1: {ox.shape}')
+        # print(f'lstm1: {ix.shape}')
+        # print(f'lstm1: {ox.shape}')
         ix = torch.reshape(ix, (ix.shape[0], ix.shape[-1]))
         ox = torch.reshape(ox, (ox.shape[0], ox.shape[-1]))
-        print(f'rei: {ix.shape}')
-        print(f'reo: {ox.shape}')
+        # print(f'rei: {ix.shape}')
+        # print(f'reo: {ox.shape}')
 
         x = torch.cat((ix, ox), dim=1)
-        print(x.shape)
+        # print(x.shape)
         
         x = self.linear(x)
         #print(f'lstm2: {x.shape}')

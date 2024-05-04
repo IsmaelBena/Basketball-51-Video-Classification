@@ -4,13 +4,21 @@ class GrayscaleModel(nn.Module):
     def __init__(self, device):
         super(GrayscaleModel, self).__init__()
 
-        self.conv1 = nn.Conv2d(in_channels = 90, out_channels = 50, kernel_size = (24, 32), stride = 9, device = device) # output shape: d=19, h=25, w=33
-        self.act1 = nn.ReLU()
-        self.pool1 = nn.MaxPool2d((3, 3), stride = 1)
 
-        self.conv2 = nn.Conv2d(in_channels = 50, out_channels = 5, kernel_size = (5, 7), stride = 2, device = device) # output shape: d=7, h=11, w=14
-        self.act2 = nn.ReLU()
-        self.pool2 = nn.MaxPool2d((3, 4), stride = 1)
+        self.conv1 = nn.Conv2d(in_channels = 90, out_channels = 110, kernel_size = (3, 3), stride = 3, device = device) # output shape: d=29, h=21, w=21
+        self.pool1 = nn.MaxPool2d((3, 3), stride = 1)
+        self.dropout1 = nn.Dropout2d(0.2)
+        self.batchnorm1 = nn.BatchNorm2d(110, device = device)
+
+        self.conv2 = nn.Conv2d(in_channels = 110, out_channels = 80, kernel_size = (3, 3), stride = 2, device = device) # output shape: d=14, h=10, w=10
+        self.pool2 = nn.MaxPool2d((3, 3), stride = 1)
+        self.dropout2 = nn.Dropout2d(0.2)
+        self.batchnorm2 = nn.BatchNorm2d(80, device = device)
+
+        self.conv3 = nn.Conv2d(in_channels = 80, out_channels = 50, kernel_size = (3, 3), stride = 2, device = device) # output shape: d=19, h=25, w=33
+        self.pool3 = nn.MaxPool2d((3, 3), stride = 1)
+        self.dropout3 = nn.Dropout2d(0.2)
+        self.batchnorm3 = nn.BatchNorm2d(50, device = device)
 
         self.flatten = nn.Flatten(start_dim=1, end_dim=-1)
 
