@@ -9,25 +9,25 @@ class CNNModel(nn.Module):
 
         # Initial kernel dims: stride=9, d=18 h=24, w=32
 
-        self.conv1 = nn.Conv3d(in_channels = 3, out_channels = 24, kernel_size = (5, 3, 3), stride = 3, device = device) # output shape: d=29, h=21, w=21
+        self.conv1 = nn.Conv3d(in_channels = 3, out_channels = 24, kernel_size = (5, 3, 3), stride = 3, device = device)
         self.act1 = nn.ReLU()
         self.pool1 = nn.MaxPool3d((2, 3, 3), stride = 1)
         self.dropout1 = nn.Dropout3d(0.2)
         self.batchnorm1 = nn.BatchNorm3d(24, device = device)
 
-        self.conv2 = nn.Conv3d(in_channels = 24, out_channels = 48, kernel_size = (2, 2, 3), stride = 2, device = device) # output shape: d=14, h=10, w=10
+        self.conv2 = nn.Conv3d(in_channels = 24, out_channels = 48, kernel_size = (2, 2, 3), stride = 2, device = device)
         self.act1 = nn.ReLU()
         self.pool2 = nn.MaxPool3d((2, 3, 3), stride = 1)
         self.dropout2 = nn.Dropout3d(0.2)
         self.batchnorm2 = nn.BatchNorm3d(48, device = device)
 
-        self.conv3 = nn.Conv3d(in_channels = 48, out_channels = 64, kernel_size = (2, 2, 3), stride = 2, device = device) # output shape: d=19, h=25, w=33
+        self.conv3 = nn.Conv3d(in_channels = 48, out_channels = 64, kernel_size = (2, 2, 3), stride = 2, device = device)
         self.act1 = nn.ReLU()
         self.pool3 = nn.MaxPool3d((2, 3, 3), stride = 1)
         self.dropout3 = nn.Dropout3d(0.2)
         self.batchnorm3 = nn.BatchNorm3d(64, device = device)
 
-        self.flatten = nn.Flatten(start_dim=1, end_dim=-1)
+        self.flatten = nn.Flatten(start_dim=2, end_dim=-1)
 
         # LSTM
         # self.lstm = nn.Sequential(
