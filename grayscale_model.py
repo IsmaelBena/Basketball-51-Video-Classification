@@ -22,7 +22,7 @@ class GrayscaleModel(nn.Module):
 
         self.flatten = nn.Flatten(start_dim=1, end_dim=-1)
 
-        self.lstm = nn.LSTM(400, 256, device = device)
+        self.lstm = nn.LSTM(16500, 256, device = device)
         self.linear = nn.Linear(256, 8, device = device)
 
         
@@ -30,14 +30,29 @@ class GrayscaleModel(nn.Module):
     def forward(self, input):
         #print(f'input: {input.shape}')
 
-        x = self.act1(self.conv1(input))
-        #print(f'act1: {x.shape}')
+        x = self.conv1(input)
         x = self.pool1(x)
-        #print(f'pool1: {x.shape}')
-
-        x = self.act2(self.conv2(x))
-        #print(f'act2: {x.shape}')
+        x = self.dropout1(x)
+        x = self.batchnorm1(x)
+        
+        x = self.conv2(x)
         x = self.pool2(x)
+        x = self.dropout2(x)
+        x = self.batchnorm2(x)
+        
+        x = self.conv3(x)
+        x = self.pool3(x)
+        x = self.dropout3(x)
+        x = self.batchnorm3(x)
+
+        # x = self.act1(self.conv1(input))
+        # #print(f'act1: {x.shape}')
+        # x = self.pool1(x)
+        # #print(f'pool1: {x.shape}')
+
+        # x = self.act2(self.conv2(x))
+        # #print(f'act2: {x.shape}')
+        # x = self.pool2(x)
         #print(f'pool2: {x.shape}')
 
         x = self.flatten(x)
