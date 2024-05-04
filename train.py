@@ -346,8 +346,8 @@ def test_in_segments(model, logger, data_slider_fraction, gray_scale=False, dens
 # training_loader = DataLoader(training_set, **train_params)
 # print(len(training_loader.dataset))
 
-model = NewBaselineModel(device)
-# model = OpticalFusionModel(device)
+# model = NewBaselineModel(device)
+model = OpticalFusionModel(device)
 # model = VGGModel(device)
 # model = GrayscaleModel(device)
 # model = CNNModel(device)
@@ -363,10 +363,11 @@ decay = 0.0001
 
 optimiser = torch.optim.Adam(model.parameters(), lr = lr, weight_decay = decay)
 
-# wandb_logger = Logger(f"inm705_cw_grayscale_SGD_train_{lr}_{decay}", project='INM705_CW')
-# logger = wandb_logger.get_logger()
+wandb_logger = Logger(f"inm705_cw_temp_testing_to_dlt", project='INM705_CW')
+logger = wandb_logger.get_logger()
 
-# train_in_segments(model, loss_function, optimiser, logger, epochs, 0.1, save_checkpoint_name='grayscale_SGD_model', gray_scale=True, dense_optical_flow=False, lr=lr, decay=decay)
+train_in_segments(model, loss_function, optimiser, logger, epochs, 0.1, save_checkpoint_name='two_stream_optical', gray_scale=False, dense_optical_flow=True, lr=lr, decay=decay)
+
 # for lr in lrs:
 #     for decay in decays:
 
@@ -396,15 +397,17 @@ optimiser = torch.optim.Adam(model.parameters(), lr = lr, weight_decay = decay)
 # with open(f'./greyscale_SGD_model_test_{lr}_{decay}.pkl', 'rb') as file:
 #     model = pickle.load(file)
 
-checkpoint_dir = './checkpoints'
-checkpoint_name = 'grayscale_s_2'
+# checkpoint_dir = './checkpoints'
+# checkpoint_name = 'grayscale_s_2'
 
-model.load_state_dict(torch.load(os.path.join(checkpoint_dir, checkpoint_name)))
+# model.load_state_dict(torch.load(os.path.join(checkpoint_dir, checkpoint_name)))
 
-wandb_logger = Logger(f"inm705_cw_grayscale_s_2_test_{lr}_{decay}", project='INM705_CW')
-logger = wandb_logger.get_logger()
+# wandb_logger = Logger(f"inm705_cw_grayscale_s_2_test_{lr}_{decay}", project='INM705_CW')
+# logger = wandb_logger.get_logger()
 
-test_in_segments(model, logger, 0.1, gray_scale=False, dense_optical_flow=False, lr=lr, decay=decay)
+# test_in_segments(model, logger, 0.1, gray_scale=False, dense_optical_flow=False, lr=lr, decay=decay)
+
+
 #==================
 # train_model(model, training_loader, loss_function, optimiser, logger, epochs)
 
