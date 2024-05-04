@@ -344,7 +344,7 @@ def test_in_segments(model, logger, data_slider_fraction, save_checkpoint_name='
 # model = OpticalFusionModel(device)
 # model = GrayscaleModel(device)
 # model = VGGModel(device)
-model = CNNModel(device)
+model = GrayscaleModel(device)
 
 # s_test_data = LocalDataset(os.path.join(os.getcwd(), 'dataset', 'test'), gray_scale=False, dense_optical_flow=True, start_segment=0, end_segment=0.01).load_dataset()
 
@@ -352,15 +352,15 @@ loss_function = torch.nn.CrossEntropyLoss()
 # lrs = [0.2, 0.1, 0.05]
 # decays = [0.01, 0.001, 0.0001]
 
-lr = 0.2
-decay = 0.0001
+lr = 0.9
+decay = 0.01
 
 optimiser = torch.optim.Adam(model.parameters(), lr = lr, weight_decay = decay)
 
-wandb_logger = Logger(f"inm705_cw_cnn_model_relu_train_{lr}_{decay}", project='INM705_CW')
+wandb_logger = Logger(f"inm705_cw_grayscale_SGD_train_{lr}_{decay}", project='INM705_CW')
 logger = wandb_logger.get_logger()
 
-train_in_segments(model, loss_function, optimiser, logger, epochs, 0.1, save_checkpoint_name='cnn_model', gray_scale=False, dense_optical_flow=False, lr=lr, decay=decay)
+train_in_segments(model, loss_function, optimiser, logger, epochs, 0.1, save_checkpoint_name='grayscale_SGD_model', gray_scale=True, dense_optical_flow=False, lr=lr, decay=decay)
 # for lr in lrs:
 #     for decay in decays:
 
@@ -381,17 +381,19 @@ train_in_segments(model, loss_function, optimiser, logger, epochs, 0.1, save_che
 #         with open(f'./greyscale_model_test_{lr}_{decay}.pkl', 'wb') as file:
 #             pickle.dump(model, file)
 #============
-lr = 0.1
-decay = 0.0001
+
+print("saving model")
+with open(f'./greyscale_model_SGD_test_{lr}_{decay}.pkl', 'wb') as file:
+    pickle.dump(model, file)
 
 print(f'loading model')
-with open(f'./greyscale_model_test_{lr}_{decay}.pkl', 'rb') as file:
+with open(f'./greyscale_SGD_model_test_{lr}_{decay}.pkl', 'rb') as file:
     model = pickle.load(file)
 
-wandb_logger = Logger(f"inm705_cw_greyscale_model_test_{lr}_{decay}", project='INM705_CW')
+wandb_logger = Logger(f"inm705_cw_greyscale_SGD_model_test_{lr}_{decay}", project='INM705_CW')
 logger = wandb_logger.get_logger()
 
-test_in_segments(model, logger, 0.1, save_checkpoint_name='', gray_scale=False, lr=lr, decay=decay)
+test_in_segments(model, logger, 0.1, save_checkpoint_name='', gray_scale=True, lr=lr, decay=decay)
 #==================
 # train_model(model, training_loader, loss_function, optimiser, logger, epochs)
 

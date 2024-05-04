@@ -30,7 +30,6 @@ class GrayscaleModel(nn.Module):
     def forward(self, input):
         #print(f'input: {input.shape}')
 
-
         x = self.conv1(input)
         x = self.pool1(x)
         x = self.dropout1(x)
