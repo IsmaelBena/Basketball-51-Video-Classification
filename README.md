@@ -47,6 +47,13 @@ The wand api key should be added to the run_job.sh on linux or entered as reques
 
 During training, you will see the most recent epoch in a folder called checkpoints, and the final model will generate a pkl file in the trained models folder.
 
+# Logging
+
+The Wandb logs for training can be found here:
+
+ - https://wandb.ai/ismael-benadjal/INM705_CW
+ - https://wandb.ai/riyaad-mangera/INM705_CW
+
 # Inference
 
 There is an inference for each model in the inference.ipynb file, editing the video_directory variable at the top of the notebook allows you to choose a video from the dataset to run through the model. A video and results have been preselected.
