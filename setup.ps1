@@ -4,4 +4,7 @@ pip install virtualenv
 virtualenv basketball_classification_env
 basketball_classification_env/Scripts/activate
 pip install -r requirements.txt
+pip install opencv-python
+pip install matplotlib
+pip install seaborn
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
