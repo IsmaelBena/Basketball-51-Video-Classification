@@ -19,6 +19,7 @@ def get_config(type = ''):
         return config
 
 
+
 def load_metadata(csv_name):
     data = pd.read_csv(f'{csv_name}.csv')
 
@@ -146,7 +147,6 @@ def remove_frames(dataset_dir, output_dir, divide_by, new_res, metadata_file='')
 
 
 
-
 def pad_dataset(dataset_dir, output_dir, metadata_filename):
     original_wd = os.getcwd()
     original_dir = os.path.join(original_wd, dataset_dir)
@@ -232,6 +232,7 @@ def pad_dataset(dataset_dir, output_dir, metadata_filename):
     shutil.rmtree(original_dir)
 
 
+
 def split_train_val_test(train_fraction, val_fraction, test_fraction, original_folder, folder_to_generate, metadata_filename):
     if train_fraction + val_fraction + test_fraction != 1:
         raise Exception("Sum of Training/Validation/Test split does not equal 1")
@@ -300,3 +301,46 @@ def split_train_val_test(train_fraction, val_fraction, test_fraction, original_f
 
         print(f'\nDeleting {original_dir}.')
         shutil.rmtree(original_dir)
+
+
+
+def get_test_video(video_dir, gray_scale = False, dense_optical_flow = False):
+    video_frames = []
+    dense_optical_flow_frames = []
+    cap=cv2.VideoCapture(os.path.join(os.getcwd(), video_dir))
+    if dense_optical_flow:
+        ret, first_frame = cap.read()
+        prev_gray = cv2.cvtColor(first_frame, cv2.COLOR_BGR2GRAY)
+        mask = np.zeros_like(first_frame)
+        while cap.isOpened():
+            ret, frame = cap.read()
+            # Once Video is over, break the loop
+            if not ret:
+                break
+            else:
+                gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                flow = cv2.calcOpticalFlowFarneback(prev_gray, gray, None, 0.5, 3, 15, 3, 5, 1.2, 0) 
+                magnitude, angle = cv2.cartToPolar(flow[..., 0], flow[..., 1])
+                mask[..., 0] = angle * 180 / np.pi / 2
+                mask[..., 2] = cv2.normalize(magnitude, None, 0, 255, cv2.NORM_MINMAX)
+                rgb = cv2.cvtColor(mask, cv2.COLOR_HSV2BGR)
+                dense_optical_flow_frames.append(rgb)
+                if gray_scale:
+                    video_frames.append(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY))
+                else:
+                    video_frames.append(frame)
+
+        return np.array(video_frames), np.array(dense_optical_flow_frames)
+
+    else:
+        while cap.isOpened():
+            ret, frame = cap.read()
+            if not ret:
+                break
+            else:
+                if gray_scale:
+                    video_frames.append(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY))
+                else:
+                    video_frames.append(frame)
+
+        return np.array(video_frames)

@@ -22,14 +22,10 @@ class GrayscaleModel(nn.Module):
 
         self.flatten = nn.Flatten(start_dim=1, end_dim=-1)
 
-        self.lstm = nn.LSTM(16500, 256, device = device)
+        self.lstm = nn.LSTM(50, 256, device = device)
         self.linear = nn.Linear(256, 8, device = device)
 
-        
-
     def forward(self, input):
-        #print(f'input: {input.shape}')
-
         x = self.conv1(input)
         x = self.pool1(x)
         x = self.dropout1(x)
@@ -45,28 +41,11 @@ class GrayscaleModel(nn.Module):
         x = self.dropout3(x)
         x = self.batchnorm3(x)
 
-        # x = self.act1(self.conv1(input))
-        # #print(f'act1: {x.shape}')
-        # x = self.pool1(x)
-        # #print(f'pool1: {x.shape}')
-
-        # x = self.act2(self.conv2(x))
-        # #print(f'act2: {x.shape}')
-        # x = self.pool2(x)
-        #print(f'pool2: {x.shape}')
-
         x = self.flatten(x)
-        #print(f'flattened: {x.shape}')
 
         x, _ = self.lstm(x.view(len(input), 1, -1))
-        #print(f'lstm1: {x.shape}')
         
         x = self.linear(x.view(len(input), -1))
-        #print(f'lstm2: {x.shape}')
-
-        #y_pred = nn.functional.log_softmax(x, dim=1)
-
-        # logits = torch.tensor(x, dtype = torch.float32)
 
         logits = x.clone().detach().requires_grad_(True)
 

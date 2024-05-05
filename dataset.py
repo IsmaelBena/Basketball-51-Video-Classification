@@ -36,7 +36,6 @@ class LocalDataset():
                         ret, frame = cap.read()
                         # Once Video is over, break the loop
                         if not ret:
-                            #print("ret is false?")
                             break
                         else:
                             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -53,9 +52,7 @@ class LocalDataset():
                 else:
                     while cap.isOpened():
                         ret, frame = cap.read()
-                        # Once Video is over, break the loop
                         if not ret:
-                            #print("ret is false?")
                             break
                         else:
                             if self.gray_scale:
@@ -63,8 +60,6 @@ class LocalDataset():
                             else:
                                 frames.append(frame)
                                 
-
-                # print(np.array(frames).shape)
                 if self.gray_scale:
                     self.x.append(np.array(frames))
                 else:
@@ -73,7 +68,6 @@ class LocalDataset():
                     self.dense_optical_flow_data.append(np.transpose(np.array(dense_optical_flow_frames), [3, 0, 1, 2]))
                 self.y.append(t_idx)
             print(f' - Label: {t_idx+1}/{len(self.targets)} | File: {len(files_segment)}/{len(files_segment)} [100.00%]      ', end='\n')
-            # print(len(self.dense_optical_flow_data[0]))
 
         return self.x, self.y, self.dense_optical_flow_data
 

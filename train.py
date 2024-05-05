@@ -16,7 +16,7 @@ import wandb
 import pandas as pd
 import sklearn
 
-from baseline_model_new import NewBaselineModel
+from baseline_model import BaselineModel
 from cnn_only_model import CNNModel
 from grayscale_model import GrayscaleModel
 from vgg16_model import VGGModel
@@ -33,7 +33,7 @@ epochs = training_config['epochs']
 train_params = {'batch_size': TRAIN_BATCH_SIZE,
                 'shuffle': True,
                 'num_workers': 0,
-                'drop_last': False,
+                'drop_last': True,
                 'pin_memory': True
                 }
 
@@ -96,7 +96,7 @@ def train_model(model, training_loader, loss_function, optimiser, logger, epochs
 
 # =================  Training function that reads the data segments at a time, takes longer but saves on memory.  ===============
 
-def train_in_segments(model, loss_function, optimiser, logger, epochs, data_slider_fraction, save_checkpoint_name='', checkpoint_name='', gray_scale=False, dense_optical_flow=False, lr=0.5, decay=0.01):
+def train_in_segments(model, loss_function, optimiser, epochs, data_slider_fraction, logger='', save_checkpoint_name='', checkpoint_name='', gray_scale=False, dense_optical_flow=False, lr=0.5, decay=0.01):
     print("Starting segmented training")
     if checkpoint_name != '':
         model.load_state_dict(torch.load(os.path.join(checkpoint_dir, checkpoint_name)))
@@ -230,23 +230,22 @@ def train_in_segments(model, loss_function, optimiser, logger, epochs, data_slid
         else:
             torch.save(model.state_dict(), os.path.join(checkpoint_dir, f'{save_checkpoint_name}_{lr}_{decay}'))
 
-        logger.log({
-            'train_loss': np.average(training_losses),
-            'eval_loss': np.average(eval_losses),
-            'epoch_acc': correct/len(pred_true)
-            })
+        if logger != '':
+            logger.log({
+                'train_loss': np.average(training_losses),
+                'eval_loss': np.average(eval_losses),
+                'epoch_acc': correct/len(pred_true)
+                })
 
     print("saving model")
     with open(f'./trained_models/{save_checkpoint_name}.pkl', 'wb') as file:
         pickle.dump(model, file)
-
-
         
 # ===============================================================================================================================
 
 # =================  Testing function that reads the data segments at a time.  ===============
 
-def test_in_segments(model, logger, data_slider_fraction, gray_scale=False, dense_optical_flow=False, lr=0.5, decay=0.01):
+def test_in_segments(model, logger, data_slider_fraction, gray_scale=False, dense_optical_flow=False):
     model.eval()
 
     pred_true = []
@@ -339,6 +338,7 @@ def test_in_segments(model, logger, data_slider_fraction, gray_scale=False, dens
     logger.log({
         'test_acc': correct/len(pred_true)
         })
+
 # ===========  Call the functions here ================================================================
 
 # data = LocalDataset(os.path.join(os.getcwd(), 'dataset'), True).load_dataset()
@@ -346,8 +346,8 @@ def test_in_segments(model, logger, data_slider_fraction, gray_scale=False, dens
 # training_loader = DataLoader(training_set, **train_params)
 # print(len(training_loader.dataset))
 
-# model = NewBaselineModel(device)
-model = OpticalFusionModel(device)
+model = BaselineModel(device)
+# model = OpticalFusionModel(device)
 # model = VGGModel(device)
 # model = GrayscaleModel(device)
 # model = CNNModel(device)
@@ -358,15 +358,15 @@ loss_function = torch.nn.CrossEntropyLoss()
 # lrs = [0.2, 0.1, 0.05]
 # decays = [0.01, 0.001, 0.0001]
 
-lr = 0.1
-decay = 0.0001
+lr = training_config['lr']
+decay = training_config['decay']
 
 optimiser = torch.optim.Adam(model.parameters(), lr = lr, weight_decay = decay)
 
-wandb_logger = Logger(f"inm705_cw_temp_testing_to_dlt", project='INM705_CW')
-logger = wandb_logger.get_logger()
+# wandb_logger = Logger(f"inm705_cw_temp_testing_to_dlt", project='INM705_CW')
+# logger = wandb_logger.get_logger()
 
-train_in_segments(model, loss_function, optimiser, logger, epochs, 0.1, save_checkpoint_name='two_stream_optical', gray_scale=False, dense_optical_flow=True, lr=lr, decay=decay)
+train_in_segments(model, loss_function, optimiser, epochs, 0.1, save_checkpoint_name='delete_this', gray_scale=False, dense_optical_flow=False, lr=lr, decay=decay)
 
 # for lr in lrs:
 #     for decay in decays:
@@ -394,19 +394,18 @@ train_in_segments(model, loss_function, optimiser, logger, epochs, 0.1, save_che
 #     pickle.dump(model, file)
 
 # print(f'loading model')
-# with open(f'./greyscale_SGD_model_test_{lr}_{decay}.pkl', 'rb') as file:
+# with open(f'./trained_models/grayscale.pkl', 'rb') as file:
 #     model = pickle.load(file)
 
 # checkpoint_dir = './checkpoints'
-# checkpoint_name = 'grayscale_s_2'
+# checkpoint_name = 'cnn_model_checkpoint'
 
 # model.load_state_dict(torch.load(os.path.join(checkpoint_dir, checkpoint_name)))
 
-# wandb_logger = Logger(f"inm705_cw_grayscale_s_2_test_{lr}_{decay}", project='INM705_CW')
+# wandb_logger = Logger(f"inm705_cw_grayscale_test", project='INM705_CW')
 # logger = wandb_logger.get_logger()
 
-# test_in_segments(model, logger, 0.1, gray_scale=False, dense_optical_flow=False, lr=lr, decay=decay)
-
+# test_in_segments(model, logger, 0.1, gray_scale=True, dense_optical_flow=False)
 
 #==================
 # train_model(model, training_loader, loss_function, optimiser, logger, epochs)
